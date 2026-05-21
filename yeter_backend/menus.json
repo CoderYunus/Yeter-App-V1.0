@@ -1,0 +1,41 @@
+{
+  "appMenu": [
+    {
+      "id": "MAP",
+      "title": "Harita",
+      "icon": "🗺️",
+      "order": 1,
+      "visible": true
+    },
+    {
+      "id": "ROUTE",
+      "title": "Rota",
+      "icon": "🧭",
+      "order": 2,
+      "visible": true
+    },
+    {
+      "id": "PROFILE",
+      "title": "Profil",
+      "icon": "👤",
+      "order": 3,
+      "visible": true
+    }
+  ],
+  "adminMenu": [
+    {
+      "id": "REPORTS",
+      "title": "İhbarlar",
+      "icon": "🚨",
+      "order": 1,
+      "visible": true
+    },
+    {
+      "id": "USERS",
+      "title": "Kullanıcılar",
+      "icon": "👥",
+      "order": 2,
+      "visible": true
+    }
+  ]
+}
