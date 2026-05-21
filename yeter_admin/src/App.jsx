@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import './App.css';
 
-const socket = io('http://192.168.0.104:3000');
+const socket = io('https://yeter-app-v1-0.onrender.com');
 
 function App() {
   const [reports, setReports] = useState([]);

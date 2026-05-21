@@ -7,7 +7,7 @@ import io from 'socket.io-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
-const socket = io('http://192.168.0.104:3000');
+const socket = io('https://yeter-app-v1-0.onrender.com');
 
 const CATEGORIES = [
   { id: 'c1', title: 'Sözlü Taciz', icon: '🗣️' },
