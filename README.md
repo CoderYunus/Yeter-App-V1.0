@@ -2,7 +2,7 @@
 
 ​Yeter App, kullanıcıların [uygulamanın temel amacı, örn: dijital alışkanlıklarını yönetmelerine, gereksiz harcamalarını takip etmelerine veya zaman yönetimini iyileştirmelerine] yardımcı olmak için tasarlanmış modern bir mobil uygulamadır.
 
-​🚀 Özellikler 
+## ​🚀 Özellikler 
 
 ​Özellik 1: [Örn: Kullanıcı dostu arayüz ile günlük limit belirleme.]
 
@@ -11,5 +11,5 @@
 ​Özellik 3: [Örn: Detaylı grafikler ile haftalık/aylık analiz raporları.]
 ​Karanlık Mod Desteği: Göz yormayan, sistemle entegre karanlık mod seçeneği.
 ​
-🛠️ Kurulum
+## 🛠️ Kurulum
 ​Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleyin:
