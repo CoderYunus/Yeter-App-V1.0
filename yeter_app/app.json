@@ -20,7 +20,12 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "DUMMY_API_KEY_TO_PREVENT_CRASH_NO_REAL_MAP_NEEDED"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
