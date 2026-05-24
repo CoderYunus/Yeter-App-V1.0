@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Modal, Dimensions, Linking, TextInput, ScrollView, ActivityIndicator, Animated } from 'react-native';
-import MapView, { UrlTile, Circle, Marker } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import io from 'socket.io-client';
@@ -53,6 +53,20 @@ export default function App() {
   const [region, setRegion] = useState({ latitude: 41.0082, longitude: 28.9784, latitudeDelta: 0.05, longitudeDelta: 0.05 });
   const [userLocation, setUserLocation] = useState(null);
   const [riskZones, setRiskZones] = useState([]);
+  
+  const mapRef = useRef(null);
+
+  useEffect(() => {
+    if (mapRef.current && activeTab === 'MAP') {
+      const data = {
+        type: 'UPDATE_DATA',
+        userLocation: userLocation,
+        riskZones: riskZones,
+        reportLocation: reportLocation
+      };
+      mapRef.current.postMessage(JSON.stringify(data));
+    }
+  }, [userLocation, riskZones, reportLocation, activeTab]);
   
   const [isDangerAlertVisible, setIsDangerAlertVisible] = useState(false);
   const [reportLocation, setReportLocation] = useState(null);
@@ -355,45 +369,119 @@ export default function App() {
     </Animated.View>
   );
 
+  const handleWebViewMessage = (event) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === 'LONG_PRESS' && isSelectingOnMap) {
+        setReportLocation({ latitude: data.lat, longitude: data.lng });
+        setIsSelectingOnMap(false);
+        setReportModalVisible(true);
+      }
+    } catch(e) {}
+  };
+
+  const leafletHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body, html { padding: 0; margin: 0; height: 100%; width: 100%; }
+    #map { height: 100%; width: 100%; background: ${isDarkMode ? '#0a0a0a' : '#f5f5f7'} }
+    .leaflet-control-attribution { display: none; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    var isDark = ${isDarkMode};
+    var map = L.map('map', {zoomControl: false}).setView([${region.latitude}, ${region.longitude}], 13);
+    
+    var tileUrl = isDark 
+      ? 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+      : 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
+      
+    L.tileLayer(tileUrl, { maxZoom: 19 }).addTo(map);
+
+    var userMarker, reportMarker;
+    var riskCircles = [];
+    var holdTimeout;
+    var isHolding = false;
+
+    function startPress(e) {
+      isHolding = true;
+      holdTimeout = setTimeout(function() {
+        if(isHolding) {
+          var lat = e.latlng ? e.latlng.lat : map.mouseEventToLatLng(e.originalEvent).lat;
+          var lng = e.latlng ? e.latlng.lng : map.mouseEventToLatLng(e.originalEvent).lng;
+          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'LONG_PRESS', lat: lat, lng: lng }));
+        }
+      }, 800);
+    }
+    function endPress() {
+      isHolding = false;
+      clearTimeout(holdTimeout);
+    }
+
+    map.on('mousedown', startPress);
+    map.on('mouseup', endPress);
+    map.on('touchstart', startPress);
+    map.on('touchend', endPress);
+    map.on('touchmove', endPress);
+
+    document.addEventListener("message", function(event) {
+      try {
+        var data = JSON.parse(event.data);
+        if(data.type === 'UPDATE_DATA') {
+          if(userMarker) map.removeLayer(userMarker);
+          if(data.userLocation) {
+            userMarker = L.circleMarker([data.userLocation.latitude, data.userLocation.longitude], {
+              radius: 8, color: '#FFFFFF', weight: 2, fillColor: '#0A84FF', fillOpacity: 1
+            }).addTo(map);
+            map.panTo([data.userLocation.latitude, data.userLocation.longitude]);
+          }
+          
+          if(reportMarker) map.removeLayer(reportMarker);
+          if(data.reportLocation) {
+            reportMarker = L.circleMarker([data.reportLocation.latitude, data.reportLocation.longitude], {
+              radius: 8, color: '#FFFFFF', weight: 2, fillColor: '#DC143C', fillOpacity: 1
+            }).addTo(map);
+          }
+
+          riskCircles.forEach(function(c) { map.removeLayer(c) });
+          riskCircles = [];
+          data.riskZones.forEach(function(zone) {
+            var color = zone.risk === 'RED' ? '#E50914' : zone.risk === 'ORANGE' ? '#FF8C00' : '#FFD700';
+            var circle = L.circle([zone.lat, zone.lng], {
+              color: zone.risk === 'RED' ? 'rgba(229,9,20,0.9)' : 'transparent',
+              weight: 1.5,
+              fillColor: color,
+              fillOpacity: zone.risk === 'RED' ? 0.45 : 0.35,
+              radius: zone.radius || 1000
+            }).addTo(map);
+            riskCircles.push(circle);
+          });
+        }
+      } catch(e) {}
+    });
+  </script>
+</body>
+</html>
+  `;
+
   const renderMapScreen = () => (
     <View style={styles.tabContent}>
-      <MapView
+      <WebView
+        ref={mapRef}
         style={styles.map}
-        initialRegion={region}
-        mapType="none"
-        showsCompass={false}
-        onLongPress={handleMapLongPress}
-      >
-        <UrlTile 
-          urlTemplate={isDarkMode 
-            ? "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png" 
-            : "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"} 
-          maximumZ={19} 
-          flipY={false} 
-        />
-
-        {riskZones.map(zone => (
-          <Circle
-            key={zone.id}
-            center={{ latitude: zone.lat, longitude: zone.lng }}
-            radius={zone.radius}
-            fillColor={getZoneColor(zone.risk)}
-            strokeColor={zone.risk === 'RED' ? 'rgba(229, 9, 20, 0.9)' : 'transparent'}
-            strokeWidth={1.5}
-          />
-        ))}
-
-        {userLocation && (
-          <Marker coordinate={userLocation} title="Buradasınız">
-            <View style={styles.userDotContainer}>
-              <View style={styles.userDotPulse} />
-              <View style={styles.userDot} />
-            </View>
-          </Marker>
-        )}
-
-        {reportLocation && <Marker coordinate={reportLocation} title="İhbar Konumu" pinColor="#DC143C" />}
-      </MapView>
+        source={{ html: leafletHTML }}
+        onMessage={handleWebViewMessage}
+        scrollEnabled={false}
+        bounces={false}
+        javaScriptEnabled={true}
+      />
       
       <ThemeToggleBtn />
 
