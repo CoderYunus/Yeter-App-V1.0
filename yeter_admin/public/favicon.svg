@@ -1,1 +1,6 @@
 
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#ffffff" />
+  <rect x="112" y="112" width="800" height="800" fill="none" stroke="#9a1321" stroke-width="30"/>
+  <text x="512" y="560" font-family="Arial Black, Impact, sans-serif" font-size="240" font-weight="900" fill="#000000" text-anchor="middle" dominant-baseline="middle" letter-spacing="10">YETER</text>
+</svg>
