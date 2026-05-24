@@ -16,11 +16,23 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.bykai.yeter_app"
+      "package": "com.bykai.yeter_app",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Yeter App guvenliginiz icin konumunuza ihtiyac duyar."
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "3a916284-0d1a-4a77-b8c4-62a4bd443d23"
